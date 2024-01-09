@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spotify</title>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #000000;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+    display: flex;
+    align-items: center;
+    justify-content: left; 
+    background-color: #1db954;
+    color: #0e0d0d;
+    padding: 0.5em;
+    font-size: 2em;
+    font-weight: 700;
+  }
+
+    .container {
+      display: flex;
+      flex: 2;
+    }
+
+    nav {
+      max-width: 230px;
+      background-color: #000000;
+      color: #fff;
+      padding: 1em;
+      text-align: center;
+    }
+
+    nav a {
+      font-size: 18px;
+      padding-left: 30px;
+      padding-right: 30px;
+      color: #fff;
+      padding: 15px;
+      border-radius: 40px;
+      background-color: #333;
+      text-decoration: none;
+      margin: 50px 0 1.5em; 
+      display: block;
+      font-weight: 500;
+    }
+    main {
+      padding: 1em;
+      flex-grow: 1;
+    }
+
+    .search-container {
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 1em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #searchInput {
+      padding: 0.5em;
+      height: 25px;
+      width: 50%;
+      border-radius: 30px;
+      border-color: #333;
+    }
+
+    #searchButton {
+      font-size: large;
+      height: 30px;
+      width: 50px;
+      border-radius: 200px;
+      margin-left: 5px;
+      background-color: black;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    #results {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+
+    .result-card {
+      color: #f4f4f4;
+      padding: 1em;
+      margin: 0.5em;
+      width: 20%;
+      box-sizing: border-box;
+      background-color: #000000;
+    }
+
+    .result-card img {
+      width: 100%;
+      height: auto;
+    }
+
+    footer {
+      background-color: #000000;
+      color: #fff;
+      padding: 1em;
+      text-align: center;
+    }
+    
+    .playlist-container{
+      margin-top: 60px;
+      margin-left: 15px;
+      text-align: left;
+    }
+
+    #recommendationCard {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      align-items: flex-start; 
+      margin-top: 1em;
+    }
+
+    @media (max-width: 767px) {
+      #recommendationCard .result-card {
+      box-sizing: border-box;
+      width: 22%;
+      margin: 0.5em;
+      background-color: #f4f4f4;
+    }
+    }
+
+    header img {
+      width: 3%;
+      max-width: 100px;
+      height: auto;
+    }
+    
+    .playlistBtn {
+      font-size: medium;
+      font-weight: 600;
+      height: 35px;
+      width: 200px;
+      border-radius: 20px;
+      margin-left: 5px;
+      margin-bottom: 10px;
+      background-color: rgb(255, 255, 255);
+      color: rgb(0, 0, 0);
+      border: none;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <img src="images/spotify.png" alt="Spotify Logo">
+    Spotify
+  </header>
+
+  <div class="container">
+    <nav>
+      <a href="home.html">Home</a>
+      <a href="index.html">Search</a>
+
+      <div class="playlist-container">
+        <h2>Your Playlist</h2>
+      <button class="playlistBtn" onclick="createPlaylist()">Create Playlist</button>
+      <button class="playlistBtn" onclick="addTracksToPlaylist()">Add Tracks to Playlist</button>
+      <div id="playlist"></div>
+      </div>
+      
+    </main>
+    </nav>
+
+    <main>
+      <div class="search-container">
+        <label for="searchInput"></label>
+        <input type="text" id="searchInput" placeholder="Search...">
+        <button id="searchButton" onclick="searchSpotify()">🔍</button>
+      </div>
+
+
+ 
+      <div id="recommendationCard"></div>
+      <div id="results"></div>
+
+      
+  </div>
+
+  <footer>
+    © 2023 Spotify
+  </footer>
+
+  <script>
+    const spotifyAPI = 'https://api.spotify.com/v1/';
+    const accessToken = 'BQCDfT_FCGfRb-D6xsYyCzWc-IJZUgkkRbBYMX0GAdxtgCIeqkm42z2BYdQC8iEmt1MlAoo0k-cMO4arQ7jGoH8lJV1kwBcHtLsIHAe5JIPhOUWMUgktAB_Ck7UpBaaGg-DTrsVKG_gybuaS4vWfWa4fNdONqXAxThaPzSKezM5FuZ5Pjj-4CP6s_HWXKWiOXMUmTqL61ayK5zDWvw8FH2dcEL9-LGIUYV605ifcv5lVBq8rJ8biFUiI2UiGeQoC2q9alA9l0kPV7wW7GDkUfQV9lpFs3kVPg1dly9UxCkT02mItKt7n';
+
+    $(document).ready(function () {
+      loadRecommendationCards();
+    });
+
+    function loadRecommendationCards() {
+      const topTracksEndpoint = 'https://api.spotify.com/v1/me/top/tracks?limit=8';
+      $.ajax({
+        url: topTracksEndpoint,
+        headers: {
+          'Authorization': 'Bearer ' + accessToken
+        },
+        success: function (data) {
+          console.log(data);
+          displayResults(data.items, $('#recommendationCard'));
+        },
+        error: function (xhr, status, error) {
+          console.error(xhr);
+          console.error(status);
+          console.error(error);
+        }
+      });
+    }
+
+    function searchSpotify() {
+      const searchTerm = $('#searchInput').val();
+      const endpoint = `${spotifyAPI}search?q=${searchTerm}&type=track&limit=50`;
+
+      $.ajax({
+        url: endpoint,
+        headers: {
+          'Authorization': 'Bearer ' + accessToken
+        },
+        success: function (data) {
+          const resultsDiv = $('#results');
+          const recommendationCard = $('#recommendationCard');
+          resultsDiv.empty();
+          recommendationCard.hide();
+
+          displayResults(data.tracks.items, resultsDiv);
+        }
+      });
+    }
+
+    function displayResults(results, container) {
+      results.forEach(result => {
+        const uri = result.uri;
+
+        const resultCard = `<div class="result-card">
+                              <iframe src="https://open.spotify.com/embed/track/${uri.split(':')[2]}" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+                            </div>`;
+
+        container.append(resultCard);
+      });
+
+      container.show();
+    }
+
+    const SPOTIFY_API_ENDPOINT = 'https://api.spotify.com/v1';
+
+    const ACCESS_TOKEN = 'BQCDfT_FCGfRb-D6xsYyCzWc-IJZUgkkRbBYMX0GAdxtgCIeqkm42z2BYdQC8iEmt1MlAoo0k-cMO4arQ7jGoH8lJV1kwBcHtLsIHAe5JIPhOUWMUgktAB_Ck7UpBaaGg-DTrsVKG_gybuaS4vWfWa4fNdONqXAxThaPzSKezM5FuZ5Pjj-4CP6s_HWXKWiOXMUmTqL61ayK5zDWvw8FH2dcEL9-LGIUYV605ifcv5lVBq8rJ8biFUiI2UiGeQoC2q9alA9l0kPV7wW7GDkUfQV9lpFs3kVPg1dly9UxCkT02mItKt7n';
+
+    function playlistCreatedCallback(data) {
+      alert(`Playlist "${data.name}" created successfully!`);
+    }
+
+    function tracksAddedCallback(data) {
+      alert('Tracks added to the playlist successfully!');
+    }
+
+    async function createPlaylist() {
+      const playlistName = prompt('Enter playlist name:');
+      if (playlistName) {
+        const url = 'https://api.spotify.com/v1/me/playlists';
+        const data = {
+          name: playlistName,
+        };
+        makeRequest(url, 'POST', playlistCreatedCallback, data);
+      }
+    }
+
+    async function addTracksToPlaylist() {
+    const music = '1wju0JlRWEtK4l94HrjP16'; 
+    const carMusic = '0pFg4nmtxPW2zV9GOedCA1';
+    const test = '1jjgOaAFOwgpxm6KctRQOi';
+
+    const playlistChoice = prompt(`Select Playlist:\n\n1: Playlist Name: Music \n2: Playlist Name: Car Music \n3: Playlist Name: Test Faiz`);
+    let selectedPlaylist;
+
+    if (playlistChoice === '1') {
+      selectedPlaylist = music;
+    } else if (playlistChoice === '2') {
+      selectedPlaylist = carMusic;
+    } else if (playlistChoice === '3') {
+      selectedPlaylist = test;
+    } else {
+      return;
+    }
+
+    const trackLink = prompt('Enter track Link:');
+    const trackId = extractTrackIdFromLink(trackLink);
+
+    if (trackId) {
+      const url = `https://api.spotify.com/v1/playlists/${selectedPlaylist}/tracks`;
+      const data = {
+        uris: [`spotify:track:${trackId}`],
+      };
+      makeRequest(url, 'POST', tracksAddedCallback, data);
+    }
+  }
+
+function extractTrackIdFromLink(link) {
+  const match = link.match(/\/track\/([^/?]+)/);
+  return match ? match[1] : null;
+}
+
+
+    function searchTracksForPlaylist(query) {
+      $.ajax({
+        url: `${SPOTIFY_API_ENDPOINT}/search?type=track&q=${query}`,
+        type: 'GET',
+        headers: {
+          'Authorization': `Bearer ${ACCESS_TOKEN}`
+        },
+        success: (response) => handleSearchResultsForPlaylist(response),
+        error: (error) => console.error('Error fetching search results:', error)
+      });
+    }
+    document.getElementById('searchButton').addEventListener('click', () => {
+      const searchInput = document.getElementById('searchInput');
+      const query = searchInput.value;
+      if (query.trim() !== '') {
+        searchTracksForPlaylist(query);
+      }
+    });
+
+    function makeRequest(url, method, callback, data) {
+      $.ajax({
+        url: url,
+        type: method,
+        headers: {
+          'Authorization': `Bearer ${ACCESS_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        data: JSON.stringify(data),
+        success: callback,
+        error: (error) => console.error('Error in API request:', error)
+      });
+    }
+
+  </script>
+
+</body>
+
+</html>
