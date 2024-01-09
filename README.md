@@ -19,9 +19,12 @@ The application ensures a responsive and adaptive layout, catering to various sc
 
 Technologies Used
 Frontend: HTML, CSS, JavaScript/jQuery
+
 API Integration: Spotify API for fetching album, artist, track, and playlist details.
+
 Responsive Design: Media queries for adapting to different screen sizes.
-Usage
+
+Usage:
 Authentication: Requires a valid Spotify account.
 Functionalities: Users can explore their favorite albums and artists, search for tracks, create playlists, and manage existing playlists.
 Recommended Tracks: Displays top tracks based on the user's listening history.
